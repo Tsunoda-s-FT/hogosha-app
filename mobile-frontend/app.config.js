@@ -1,96 +1,96 @@
-require('dotenv').config()
+require('dotenv').config();
 
 // Preview ビルドだけ別の packageId / bundleId でインストールできるように
 // APP_VARIANT 環境変数（preview / development / undefined）で切り替える
-const isPreview = process.env.APP_VARIANT === 'preview'
+const isPreview = process.env.APP_VARIANT === 'preview';
 
 module.exports = () => {
-	const config = {
-		expo: {
-			runtimeVersion: '1.0.0',
-			name: isPreview ? 'parent-notification (Preview)' : 'parent-notification',
-			slug: 'parent-notification',
-			version: '1.0.0',
-			orientation: 'portrait',
-			icon: './assets/images/icon.png',
-			scheme: 'jduapp',
-			platforms: ['ios', 'android', 'web'],
-			userInterfaceStyle: 'automatic',
-			splash: {
-				image: './assets/images/splash.png',
-				resizeMode: 'contain',
-				backgroundColor: '#ffffff',
-			},
-			ios: {
-				supportsTablet: true,
-				bundleIdentifier: isPreview
-					? 'com.jduapp.parentnotification.preview'
-					: 'com.jduapp.parentnotification',
-				infoPlist: {
-					CFBundleAllowMixedLocalizations: true,
-					ITSAppUsesNonExemptEncryption: false,
-				},
-				googleServicesFile: isPreview
-					? './GoogleService-Info-preview.plist'
-					: './GoogleService-Info.plist',
-			},
-			android: {
-				adaptiveIcon: {
-					foregroundImage: './assets/images/adaptive-icon.png',
-					backgroundColor: '#ffffff',
-				},
-				allowBackup: false,
-				package: isPreview
-					? 'com.jduapp.parentnotification.preview'
-					: 'com.jduapp.parentnotification',
-				googleServicesFile: isPreview
-					? './google-services-preview.json'
-					: './google-services.json',
-				intentFilters: [
-					{
-						autoVerify: true,
-						action: 'VIEW',
-						data: [
-							{
-								scheme: 'https',
-								host: 'appuri-hogosha.vercel.app',
-								pathPrefix: '/parentnotification',
-							},
-						],
-						category: ['BROWSABLE', 'DEFAULT'],
-					},
-				],
-			},
-			web: {
-				bundler: 'metro',
-				output: 'static',
-				favicon: './assets/images/favicon.png',
-			},
-			plugins: [
-				[
-					'expo-notifications',
-					{
-						icon: './assets/images/icon.png',
-						color: '#000000',
-					},
-				],
-				'expo-router',
-				'expo-font',
-				'expo-localization',
-			],
-			experiments: {},
-			extra: {
-				router: {
-					origin: false,
-				},
-				eas: {
-					// 環境変数 EAS_PROJECT_ID があればそれを使用し、なければデフォルト値を使う
-					projectId:
-						process.env.EAS_PROJECT_ID ||
-						'2b7c7844-0299-4395-8f26-fcc8f40e1b1c',
-				},
-			},
-		},
-	}
-	return config
-}
+  const config = {
+    expo: {
+      runtimeVersion: '1.0.0',
+      name: isPreview ? 'parent-notification (Preview)' : 'parent-notification',
+      slug: 'parent-notification',
+      version: '1.0.0',
+      orientation: 'portrait',
+      icon: './assets/images/icon.png',
+      scheme: 'jduapp',
+      platforms: ['ios', 'android', 'web'],
+      userInterfaceStyle: 'automatic',
+      splash: {
+        image: './assets/images/splash.png',
+        resizeMode: 'contain',
+        backgroundColor: '#ffffff',
+      },
+      ios: {
+        supportsTablet: true,
+        bundleIdentifier: isPreview
+          ? 'com.jduapp.parentnotification.preview'
+          : 'com.jduapp.parentnotification',
+        infoPlist: {
+          CFBundleAllowMixedLocalizations: true,
+          ITSAppUsesNonExemptEncryption: false,
+        },
+        googleServicesFile: isPreview
+          ? './GoogleService-Info-preview.plist'
+          : './GoogleService-Info.plist',
+      },
+      android: {
+        adaptiveIcon: {
+          foregroundImage: './assets/images/adaptive-icon.png',
+          backgroundColor: '#ffffff',
+        },
+        allowBackup: false,
+        package: isPreview
+          ? 'com.jduapp.parentnotification.preview'
+          : 'com.jduapp.parentnotification',
+        googleServicesFile: isPreview
+          ? './google-services-preview.json'
+          : './google-services.json',
+        intentFilters: [
+          {
+            autoVerify: true,
+            action: 'VIEW',
+            data: [
+              {
+                scheme: 'https',
+                host: 'appuri-hogosha.vercel.app',
+                pathPrefix: '/parentnotification',
+              },
+            ],
+            category: ['BROWSABLE', 'DEFAULT'],
+          },
+        ],
+      },
+      web: {
+        bundler: 'metro',
+        output: 'static',
+        favicon: './assets/images/favicon.png',
+      },
+      plugins: [
+        [
+          'expo-notifications',
+          {
+            icon: './assets/images/icon.png',
+            color: '#000000',
+          },
+        ],
+        'expo-router',
+        'expo-font',
+        'expo-localization',
+      ],
+      experiments: {},
+      extra: {
+        router: {
+          origin: false,
+        },
+        eas: {
+          // 環境変数 EAS_PROJECT_ID があればそれを使用し、なければデフォルト値を使う
+          projectId:
+            process.env.EAS_PROJECT_ID ||
+            '2b7c7844-0299-4395-8f26-fcc8f40e1b1c',
+        },
+      },
+    },
+  };
+  return config;
+};
