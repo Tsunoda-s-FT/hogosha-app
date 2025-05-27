@@ -10,7 +10,7 @@ module.exports = () => {
       runtimeVersion: '1.0.0',
       name: isPreview ? 'parent-notification (Preview)' : 'parent-notification',
       slug: 'parent-notification',
-      version: '1.0.0',
+      version: '1.0.1',
       orientation: 'portrait',
       icon: './assets/images/icon.png',
       scheme: 'jduapp',
