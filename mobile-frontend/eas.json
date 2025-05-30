@@ -57,5 +57,14 @@
 				"EAS_PROJECT_ID": "2b7c7844-0299-4395-8f26-fcc8f40e1b1c"
 			}
 		}
+	},
+	"submit": {
+		"production": {
+			"ios": {
+				"appleId": "co-work_appdev@jdu.uz",
+				"ascAppId": "6736754251",
+				"appleTeamId": "7CL4TN5VC6"
+			}
+		}
 	}
 }
