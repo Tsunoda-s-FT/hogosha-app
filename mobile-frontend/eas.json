@@ -64,6 +64,11 @@
 				"appleId": "co-work_appdev@jdu.uz",
 				"ascAppId": "6736754251",
 				"appleTeamId": "7CL4TN5VC6"
+			},
+			"android": {
+				"track": "internal",
+				"releaseStatus": "draft",
+				"rollout": 1.0
 			}
 		}
 	}
