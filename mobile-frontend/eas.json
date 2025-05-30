@@ -1,74 +1,74 @@
 {
-	"cli": {
-		"appVersionSource": "remote",
-		"requireCommit": true,
-		"promptToConfigurePushNotifications": false
-	},
-	"build": {
-		"development": {
-			"developmentClient": true,
-			"distribution": "internal"
-		},
-		"preview": {
-			"android": {
-				"buildType": "app-bundle"
-			},
-			"distribution": "internal",
-			"env": {
-				"APP_VARIANT": "preview",
-				"EXPO_PUBLIC_API_URL": "https://k74uz0viqb.execute-api.ap-northeast-1.amazonaws.com/api/mobile",
-				"EXPO_PUBLIC_S3_BASE_URL": "https://hogosha-bucket.s3.ap-northeast-1.amazonaws.com/images",
-				"EAS_PROJECT_ID": "2b7c7844-0299-4395-8f26-fcc8f40e1b1c"
-			}
-		},
-		"production": {
-			"autoIncrement": true,
-			"android": {
-				"buildType": "app-bundle"
-			},
-			"distribution": "store",
-			"environment": "production",
-			"env": {
-				"EXPO_PUBLIC_API_URL": "https://k74uz0viqb.execute-api.ap-northeast-1.amazonaws.com/api/mobile",
-				"EXPO_PUBLIC_S3_BASE_URL": "https://hogosha-bucket.s3.ap-northeast-1.amazonaws.com/images",
-				"EAS_PROJECT_ID": "2b7c7844-0299-4395-8f26-fcc8f40e1b1c"
-			}
-		},
-		"internal": {
-			"android": {
-				"buildType": "apk"
-			},
-			"distribution": "internal",
-			"env": {
-				"EXPO_PUBLIC_API_URL": "https://k74uz0viqb.execute-api.ap-northeast-1.amazonaws.com/api/mobile",
-				"EXPO_PUBLIC_S3_BASE_URL": "https://hogosha-bucket.s3.ap-northeast-1.amazonaws.com/images",
-				"EAS_PROJECT_ID": "2b7c7844-0299-4395-8f26-fcc8f40e1b1c"
-			}
-		},
-		"internal-testing": {
-			"distribution": "internal",
-			"android": {
-				"buildType": "app-bundle"
-			},
-			"env": {
-				"APP_VARIANT": "preview",
-				"EXPO_PUBLIC_API_URL": "https://k74uz0viqb.execute-api.ap-northeast-1.amazonaws.com/api/mobile",
-				"EXPO_PUBLIC_S3_BASE_URL": "https://hogosha-bucket.s3.ap-northeast-1.amazonaws.com/images",
-				"EAS_PROJECT_ID": "2b7c7844-0299-4395-8f26-fcc8f40e1b1c"
-			}
-		}
-	},
-	"submit": {
-		"production": {
-			"ios": {
-				"appleId": "co-work_appdev@jdu.uz",
-				"ascAppId": "6736754251",
-				"appleTeamId": "7CL4TN5VC6"
-			},
-			"android": {
-				"track": "internal",
-				"releaseStatus": "draft"
-			}
-		}
-	}
+  "cli": {
+    "appVersionSource": "remote",
+    "requireCommit": true,
+    "promptToConfigurePushNotifications": false
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "distribution": "internal",
+      "env": {
+        "APP_VARIANT": "preview",
+        "EXPO_PUBLIC_API_URL": "https://k74uz0viqb.execute-api.ap-northeast-1.amazonaws.com/api/mobile",
+        "EXPO_PUBLIC_S3_BASE_URL": "https://hogosha-bucket.s3.ap-northeast-1.amazonaws.com/images",
+        "EAS_PROJECT_ID": "2b7c7844-0299-4395-8f26-fcc8f40e1b1c"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "distribution": "store",
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://k74uz0viqb.execute-api.ap-northeast-1.amazonaws.com/api/mobile",
+        "EXPO_PUBLIC_S3_BASE_URL": "https://hogosha-bucket.s3.ap-northeast-1.amazonaws.com/images",
+        "EAS_PROJECT_ID": "2b7c7844-0299-4395-8f26-fcc8f40e1b1c"
+      }
+    },
+    "internal": {
+      "android": {
+        "buildType": "apk"
+      },
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://k74uz0viqb.execute-api.ap-northeast-1.amazonaws.com/api/mobile",
+        "EXPO_PUBLIC_S3_BASE_URL": "https://hogosha-bucket.s3.ap-northeast-1.amazonaws.com/images",
+        "EAS_PROJECT_ID": "2b7c7844-0299-4395-8f26-fcc8f40e1b1c"
+      }
+    },
+    "internal-testing": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "APP_VARIANT": "preview",
+        "EXPO_PUBLIC_API_URL": "https://k74uz0viqb.execute-api.ap-northeast-1.amazonaws.com/api/mobile",
+        "EXPO_PUBLIC_S3_BASE_URL": "https://hogosha-bucket.s3.ap-northeast-1.amazonaws.com/images",
+        "EAS_PROJECT_ID": "2b7c7844-0299-4395-8f26-fcc8f40e1b1c"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "co-work_appdev@jdu.uz",
+        "ascAppId": "6736754251",
+        "appleTeamId": "7CL4TN5VC6"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
+  }
 }
