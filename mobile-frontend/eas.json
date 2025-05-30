@@ -1,7 +1,8 @@
 {
 	"cli": {
 		"appVersionSource": "remote",
-		"requireCommit": true
+		"requireCommit": true,
+		"promptToConfigurePushNotifications": false
 	},
 	"build": {
 		"development": {
@@ -21,7 +22,7 @@
 			}
 		},
 		"production": {
-			"autoIncrement": false,
+			"autoIncrement": true,
 			"android": {
 				"buildType": "app-bundle"
 			},

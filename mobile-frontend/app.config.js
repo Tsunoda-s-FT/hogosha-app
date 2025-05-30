@@ -23,12 +23,19 @@ module.exports = () => {
       },
       ios: {
         supportsTablet: true,
+        buildNumber: '2',
         bundleIdentifier: isPreview
           ? 'com.jduapp.parentnotification.preview'
           : 'com.jduapp.parentnotification',
         infoPlist: {
           CFBundleAllowMixedLocalizations: true,
           ITSAppUsesNonExemptEncryption: false,
+          NSCameraUsageDescription:
+            'This app uses the camera to take photos for messages.',
+          NSPhotoLibraryUsageDescription:
+            'This app accesses your photo library to select images for messages.',
+          NSUserNotificationsUsageDescription:
+            'This app uses notifications to alert you about new messages from school.',
         },
         googleServicesFile: isPreview
           ? './GoogleService-Info-preview.plist'
@@ -40,12 +47,19 @@ module.exports = () => {
           backgroundColor: '#ffffff',
         },
         allowBackup: false,
+        versionCode: 2,
         package: isPreview
           ? 'com.jduapp.parentnotification.preview'
           : 'com.jduapp.parentnotification',
         googleServicesFile: isPreview
           ? './google-services-preview.json'
           : './google-services.json',
+        permissions: [
+          'android.permission.CAMERA',
+          'android.permission.READ_EXTERNAL_STORAGE',
+          'android.permission.WRITE_EXTERNAL_STORAGE',
+          'android.permission.NOTIFICATIONS',
+        ],
         intentFilters: [
           {
             autoVerify: true,
@@ -72,6 +86,8 @@ module.exports = () => {
           {
             icon: './assets/images/icon.png',
             color: '#000000',
+            sounds: [],
+            mode: 'production',
           },
         ],
         'expo-router',
