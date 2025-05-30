@@ -7,7 +7,7 @@ import { StudentProvider } from '@/contexts/student-context';
 import { RootSiblingParent } from 'react-native-root-siblings';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SQLiteProvider } from 'expo-sqlite';
-import { SessionProvider } from '@/contexts/auth-context';
+import { SessionProvider, useSession } from '@/contexts/auth-context';
 import { ThemeProvider } from '@rneui/themed';
 import { NetworkProvider } from '@/contexts/network-context';
 import { I18nProvider } from '@/contexts/i18n-context';
@@ -67,8 +67,74 @@ function useNotificationObserver() {
     };
   }, []);
 }
+function AppWithNotifications() {
+  const { session } = useSession();
+  const [pushToken, setPushToken] = React.useState<string | null>(null);
+
+  // Initialize push notifications once
+  React.useEffect(() => {
+    (async () => {
+      const result = await initPushNotifications();
+
+      if (result.status === 'granted' && result.token) {
+        setPushToken(result.token);
+        
+        // Try to send token immediately (will work if already logged in)
+        const success = await sendPushTokenToBackend(result.token);
+        if (!success) {
+          console.log('[Push] Token registration will retry after login');
+        }
+      } else if (result.status === 'denied') {
+        // Optional UI: guide users to Settings ➜ Notifications
+        console.log('[Push] User denied permission');
+      } else if (result.status === 'device_unsupported') {
+        console.log('[Push] Running in an emulator / web – skipping push');
+      } else if (result.status === 'error') {
+        // Already logged, but you could show a toast here
+      }
+    })();
+
+    // keep backend in sync when the token rotates (re‑install, OS update...)
+    const sub = Notifications.addPushTokenListener(({ data }) =>
+      sendPushTokenToBackend(data)
+    );
+
+    return () => sub.remove();
+  }, []);
+
+  // Retry token registration when session becomes available
+  React.useEffect(() => {
+    if (session && pushToken) {
+      (async () => {
+        console.log('[Push] Session available, retrying token registration');
+        const success = await sendPushTokenToBackend(pushToken);
+        if (success) {
+          console.log('[Push] Token successfully registered after login');
+        } else {
+          console.warn('[Push] Token registration failed even with session');
+        }
+      })();
+    }
+  }, [session, pushToken]);
+
+  useNotificationObserver();
+
+  const queryClient = new QueryClient();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <StudentProvider>
+        <FontSizeProvider>
+          <Slot />
+        </FontSizeProvider>
+      </StudentProvider>
+    </QueryClientProvider>
+  );
+}
+
 export default function Root() {
   const [themeMode, setThemeMode] = React.useState<'light' | 'dark'>('light');
+  
   React.useEffect(() => {
     // Load saved theme
     AsyncStorage.getItem('themeMode').then(savedMode => {
@@ -88,34 +154,6 @@ export default function Root() {
     [themeMode]
   );
 
-  React.useEffect(() => {
-    (async () => {
-      const result = await initPushNotifications();
-
-      if (result.status === 'granted' && result.token) {
-        await sendPushTokenToBackend(result.token);
-      } else if (result.status === 'denied') {
-        // Optional UI: guide users to Settings ➜ Notifications
-        console.log('[Push] User denied permission');
-      } else if (result.status === 'device_unsupported') {
-        console.log('[Push] Running in an emulator / web – skipping push');
-      } else if (result.status === 'error') {
-        // Already logged, but you could show a toast here
-      }
-    })();
-
-    // keep backend in sync when the token rotates (re‑install, OS update...)
-    const sub = Notifications.addPushTokenListener(({ data }) =>
-      sendPushTokenToBackend(data)
-    );
-
-    return () => sub.remove();
-  }, []);
-
-  useNotificationObserver();
-
-  const queryClient = new QueryClient();
-
   return (
     <RootSiblingParent>
       <GestureHandlerRootView style={{ flex: 1 }}>
@@ -127,13 +165,7 @@ export default function Root() {
             <ThemeProvider theme={memoizedTheme}>
               <NetworkProvider>
                 <I18nProvider>
-                  <QueryClientProvider client={queryClient}>
-                    <StudentProvider>
-                      <FontSizeProvider>
-                        <Slot />
-                      </FontSizeProvider>
-                    </StudentProvider>
-                  </QueryClientProvider>
+                  <AppWithNotifications />
                 </I18nProvider>
               </NetworkProvider>
             </ThemeProvider>
