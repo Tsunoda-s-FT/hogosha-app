@@ -67,8 +67,7 @@
 			},
 			"android": {
 				"track": "internal",
-				"releaseStatus": "draft",
-				"rollout": 1.0
+				"releaseStatus": "draft"
 			}
 		}
 	}
