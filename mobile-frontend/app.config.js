@@ -47,7 +47,7 @@ module.exports = () => {
           backgroundColor: '#ffffff',
         },
         allowBackup: false,
-        versionCode: 2,
+        versionCode: isPreview ? 1000 : 2,
         package: isPreview
           ? 'com.jduapp.parentnotification.preview'
           : 'com.jduapp.parentnotification',
