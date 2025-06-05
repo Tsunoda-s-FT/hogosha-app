@@ -14,14 +14,15 @@ web-build/
 # macOS
 .DS_Store
 
-# Google Service Account
-# ↓ 以下はビルド・CIに必要なので ignore から除外
-# google-services.json
-# eas.json
-# app.json
-# app.config.js
-# google-services-preview.json
-# GoogleService-Info.plist
+# Google Service Account & Firebase config
+# These files contain API keys and should be kept secure
+# For CI/CD, use environment variables or secure file storage
+google-services*.json
+GoogleService-Info*.plist
+
+# Build configuration (contains API endpoints)
+# Consider using environment variables for sensitive URLs
+# eas.json  # Uncomment if you want to exclude this
 
 # Credentials and certificates - NEVER commit these!
 credentials.json
