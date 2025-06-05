@@ -30,10 +30,6 @@ module.exports = () => {
         infoPlist: {
           CFBundleAllowMixedLocalizations: true,
           ITSAppUsesNonExemptEncryption: false,
-          NSCameraUsageDescription:
-            'This app uses the camera to take photos for messages.',
-          NSPhotoLibraryUsageDescription:
-            'This app accesses your photo library to select images for messages.',
           NSUserNotificationsUsageDescription:
             'This app uses notifications to alert you about new messages from school.',
         },
@@ -55,9 +51,6 @@ module.exports = () => {
           ? './google-services-preview.json'
           : './google-services.json',
         permissions: [
-          'android.permission.CAMERA',
-          'android.permission.READ_EXTERNAL_STORAGE',
-          'android.permission.WRITE_EXTERNAL_STORAGE',
           'android.permission.NOTIFICATIONS',
         ],
         intentFilters: [
