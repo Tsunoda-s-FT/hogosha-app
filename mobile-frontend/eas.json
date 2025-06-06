@@ -10,6 +10,7 @@
 			"distribution": "internal"
 		},
 		"preview": {
+			"autoIncrement": true,
 			"android": {
 				"buildType": "app-bundle"
 			},
