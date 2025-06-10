@@ -50,9 +50,7 @@ module.exports = () => {
         googleServicesFile: isPreview
           ? './google-services-preview.json'
           : './google-services.json',
-        permissions: [
-          'android.permission.NOTIFICATIONS',
-        ],
+        permissions: ['android.permission.NOTIFICATIONS'],
         intentFilters: [
           {
             autoVerify: true,
