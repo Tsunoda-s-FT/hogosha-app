@@ -8,9 +8,9 @@ module.exports = () => {
   const config = {
     expo: {
       runtimeVersion: '1.0.0',
-      name: isPreview ? 'parent-notification (Preview)' : 'parent-notification',
+      name: isPreview ? 'Parent Notification (Preview)' : 'Parent Notification',
       slug: 'parent-notification',
-      version: '1.0.1',
+      version: '1.1.0',
       orientation: 'portrait',
       icon: './assets/images/icon.png',
       scheme: 'jduapp',
@@ -23,7 +23,7 @@ module.exports = () => {
       },
       ios: {
         supportsTablet: true,
-        buildNumber: '2',
+        buildNumber: '3',
         bundleIdentifier: isPreview
           ? 'com.jduapp.parentnotification.preview'
           : 'com.jduapp.parentnotification',
@@ -43,7 +43,7 @@ module.exports = () => {
           backgroundColor: '#ffffff',
         },
         allowBackup: false,
-        versionCode: 2,
+        versionCode: 3,
         package: isPreview
           ? 'com.jduapp.parentnotification.preview'
           : 'com.jduapp.parentnotification',
@@ -84,6 +84,7 @@ module.exports = () => {
         'expo-router',
         'expo-font',
         'expo-localization',
+        'expo-sqlite',
       ],
       experiments: {},
       extra: {

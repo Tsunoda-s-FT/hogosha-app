@@ -9,6 +9,8 @@ import {
   Pressable,
   ActivityIndicator,
   ToastAndroid,
+  Platform,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -28,6 +30,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useTheme } from '@rneui/themed';
 import { DateTime } from 'luxon';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { toggleDemoMessageReadStatus } from '@/utils/demo-data';
 
 const styles = StyleSheet.create({
   container: {
@@ -105,6 +109,14 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignSelf: 'flex-end',
   },
+  readToggleButton: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 5,
+  },
 });
 
 export default function DetailsScreen() {
@@ -113,6 +125,7 @@ export default function DetailsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [zoomVisible, setZoomVisible] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   const { id } = useLocalSearchParams();
   const { language, i18n } = useContext(I18nContext);
@@ -183,13 +196,17 @@ export default function DetailsScreen() {
         return;
       }
 
+      // Check if we're in demo mode
+      const demoMode = await AsyncStorage.getItem('is_demo_mode');
+      setIsDemoMode(demoMode === 'true');
+
       try {
         let fullMessage: DatabaseMessage | null = null;
         const localMessage = await fetchMessageFromDB(db, Number(id));
 
         if (localMessage) {
           fullMessage = localMessage;
-        } else if (isOnline) {
+        } else if (isOnline && !demoMode) {
           const response = await fetch(`${apiUrl}/posts/${id}`, {
             method: 'GET',
             headers: {
@@ -230,7 +247,8 @@ export default function DetailsScreen() {
         }
 
         setMessage(fullMessage);
-        if (!fullMessage.sent_status) {
+        // Only mark as read if not in demo mode and not already sent
+        if (!demoMode && !fullMessage.sent_status) {
           await markMessageAsRead(fullMessage.id, fullMessage.student_id);
         }
       } catch (error) {
@@ -290,7 +308,46 @@ export default function DetailsScreen() {
     if (message?.content) {
       await Clipboard.setStringAsync(message.content);
 
-      ToastAndroid.show('Text copied to clipboard!', ToastAndroid.SHORT);
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Text copied to clipboard!', ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Copied', 'Text copied to clipboard!', [{ text: 'OK' }], {
+          userInterfaceStyle: theme.mode,
+        });
+      }
+    }
+  };
+
+  const toggleReadStatus = async () => {
+    if (!message || !isDemoMode) return;
+    
+    try {
+      await toggleDemoMessageReadStatus(db, message.id.toString());
+      // Refresh the message to show updated read status
+      const updatedMessage = await fetchMessageFromDB(db, message.id);
+      if (updatedMessage) {
+        setMessage(updatedMessage);
+        const statusMessage = updatedMessage.read_status ? 'Marked as read' : 'Marked as unread';
+        
+        if (Platform.OS === 'android') {
+          ToastAndroid.show(statusMessage, ToastAndroid.SHORT);
+        } else {
+          Alert.alert('Status Updated', statusMessage, [{ text: 'OK' }], {
+            userInterfaceStyle: theme.mode,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling read status:', error);
+      const errorMessage = 'Failed to update read status';
+      
+      if (Platform.OS === 'android') {
+        ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Error', errorMessage, [{ text: 'OK' }], {
+          userInterfaceStyle: theme.mode,
+        });
+      }
     }
   };
 
@@ -358,6 +415,28 @@ export default function DetailsScreen() {
           {formatMessageDate(new Date(formattedTime), language)}
         </ThemedText>
       </View>
+      
+      {/* Demo mode read/unread toggle button */}
+      {isDemoMode && (
+        <Pressable
+          style={[
+            styles.readToggleButton,
+            {
+              backgroundColor: message.read_status ? '#059669' : '#dc2626',
+            },
+          ]}
+          onPress={toggleReadStatus}
+        >
+          <Ionicons
+            name={message.read_status ? 'checkmark-circle' : 'eye-off'}
+            size={20}
+            color='white'
+          />
+          <Text style={{ color: 'white' }}>
+            {message.read_status ? 'Mark as Unread' : 'Mark as Read'}
+          </Text>
+        </Pressable>
+      )}
       <Modal
         visible={zoomVisible}
         transparent={true}

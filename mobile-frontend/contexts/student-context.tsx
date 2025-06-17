@@ -12,6 +12,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useNetwork } from './network-context';
 import { useQuery } from '@tanstack/react-query';
 import { fetchStudentsFromDB } from '@/utils/queries';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface StudentContextValue {
   students: Student[] | null;
@@ -80,6 +81,14 @@ export function StudentProvider(props: PropsWithChildren) {
   } = useQuery<Student[], Error>({
     queryKey: ['students'],
     queryFn: async () => {
+      // Check if we're in demo mode
+      const isDemoMode = await AsyncStorage.getItem('is_demo_mode');
+      if (isDemoMode === 'true') {
+        // In demo mode, always fetch from local database
+        return await fetchStudentsFromDB(db);
+      }
+      
+      // Normal flow
       if (isOnline) {
         try {
           const res = await fetch(`${apiUrl}/students`, {

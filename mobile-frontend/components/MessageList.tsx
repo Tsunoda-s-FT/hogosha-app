@@ -32,6 +32,7 @@ import { useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@rneui/themed';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Styles for the component
 const styles = StyleSheet.create({
@@ -234,6 +235,15 @@ const MessageList = ({ studentId }: { studentId: number }) => {
   // Fetch messages from API (online mode)
   const fetchMessagesFromAPI = async ({ pageParam = {} }) => {
     if (!student) return [];
+    
+    // Check if we're in demo mode
+    const isDemoMode = await AsyncStorage.getItem('is_demo_mode');
+    if (isDemoMode === 'true') {
+      // In demo mode, fetch from local database
+      const messages = await fetchMessagesFromDB(db, student.student_number);
+      return messages;
+    }
+    
     const { last_post_id = 0, last_sent_at = null }: any = pageParam || {};
     try {
       const response = await fetch(`${apiUrl}/posts`, {

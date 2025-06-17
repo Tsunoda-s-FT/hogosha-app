@@ -6,6 +6,8 @@ import { useSQLiteContext } from 'expo-sqlite';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { registerForPushNotificationsAsync } from '@/utils/utils';
 import { ICountry } from 'react-native-international-phone-number';
+import { isDemoModeLogin, generateDemoSession } from '@/utils/demo-mode';
+import { initializeDemoData } from '@/utils/demo-data';
 
 const AuthContext = React.createContext<{
   signIn: (
@@ -52,6 +54,42 @@ export function SessionProvider(props: React.PropsWithChildren) {
           await AsyncStorage.setItem('phoneNumber', phoneNumber);
           await AsyncStorage.setItem('country', JSON.stringify(country));
           await AsyncStorage.setItem('password', password);
+          
+          // Check if this is a demo mode login
+          const fullPhoneNumber = country?.callingCode + phoneNumber.replaceAll(' ', '');
+          if (isDemoModeLogin(fullPhoneNumber, password)) {
+            try {
+              // Initialize demo data in SQLite
+              await initializeDemoData(db);
+              
+              // Generate demo session
+              const demoSession = generateDemoSession();
+              
+              // Save demo session data
+              setSession(demoSession.access_token);
+              await AsyncStorage.setItem('refresh_token', demoSession.refresh_token);
+              await AsyncStorage.setItem('is_demo_mode', 'true');
+              
+              // Insert demo user into database
+              await db.runAsync(
+                'INSERT OR REPLACE INTO user (given_name, family_name, phone_number, email) VALUES ($given_name, $family_name, $phone_number, $email)',
+                [
+                  demoSession.user.given_name,
+                  demoSession.user.family_name,
+                  demoSession.user.phone_number,
+                  demoSession.user.email,
+                ]
+              );
+              
+              router.replace('/');
+              return;
+            } catch (error) {
+              console.error('Error during demo mode sign in:', error);
+              throw error;
+            }
+          }
+          
+          // Normal login flow
           try {
             await registerForPushNotificationsAsync().then(async token => {
               const response = await fetch(`${apiUrl}/login`, {
@@ -60,8 +98,7 @@ export function SessionProvider(props: React.PropsWithChildren) {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  phone_number:
-                    country?.callingCode + phoneNumber.replaceAll(' ', ''),
+                  phone_number: fullPhoneNumber,
                   password,
                   token,
                 }),
@@ -78,6 +115,7 @@ export function SessionProvider(props: React.PropsWithChildren) {
               const data: Session = await response.json();
               setSession(data.access_token);
               await AsyncStorage.setItem('refresh_token', data.refresh_token);
+              await AsyncStorage.removeItem('is_demo_mode');
               await db.runAsync(
                 'INSERT INTO user (given_name, family_name, phone_number, email) VALUES ($given_name, $family_name, $phone_number, $email)',
                 [
@@ -152,6 +190,7 @@ export function SessionProvider(props: React.PropsWithChildren) {
             await AsyncStorage.removeItem('country');
             await AsyncStorage.removeItem('password');
             await AsyncStorage.removeItem('refresh_token');
+            await AsyncStorage.removeItem('is_demo_mode');
           } catch (error) {
             console.error('Error during sign out:', error);
           } finally {
