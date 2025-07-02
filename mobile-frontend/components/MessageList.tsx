@@ -33,6 +33,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@rneui/themed';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMessageContext } from '@/contexts/message-context';
 
 // Styles for the component
 const styles = StyleSheet.create({
@@ -40,7 +41,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   container: {
     flex: 1,
@@ -157,12 +157,13 @@ const NoMessagesState: React.FC<{
       <Button
         title={i18n[language].refresh}
         onPress={onRefresh}
-        buttonStyle={[
-          styles.refreshButton,
-          { backgroundColor: theme.colors.primary || '#005678' },
-        ]}
+        buttonStyle={[styles.refreshButton, { backgroundColor: '#005678' }]}
+        disabledStyle={[styles.refreshButton, { backgroundColor: '#003d56' }]}
         loading={isRefreshing}
         disabled={isRefreshing}
+        loadingProps={{
+          color: theme.mode === 'dark' ? '#4a90a4' : '#ffffff',
+        }}
         icon={
           !isRefreshing ? (
             <Ionicons
@@ -213,8 +214,8 @@ const MessageList = ({ studentId }: { studentId: number }) => {
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [isLoadingMoreOffline, setIsLoadingMoreOffline] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
   const readButNotSentMessageIDs = useRef<number[]>([]);
+  const refetchRef = useRef<() => Promise<any>>(() => Promise.resolve());
 
   // Fetch student details based on studentId
   useEffect(() => {
@@ -233,7 +234,11 @@ const MessageList = ({ studentId }: { studentId: number }) => {
   }, [db, studentId]);
 
   // Fetch messages from API (online mode)
-  const fetchMessagesFromAPI = async ({ pageParam = {} }) => {
+  const fetchMessagesFromAPI = async ({
+    pageParam,
+  }: {
+    pageParam: { last_post_id: number; last_sent_at: string | null } | null;
+  }) => {
     if (!student) return [];
     
     // Check if we're in demo mode
@@ -243,8 +248,19 @@ const MessageList = ({ studentId }: { studentId: number }) => {
       const messages = await fetchMessagesFromDB(db, student.student_number);
       return messages;
     }
-    
-    const { last_post_id = 0, last_sent_at = null }: any = pageParam || {};
+
+    const requestBody: any = {
+      student_id: student.id,
+      read_post_ids: readButNotSentMessageIDs.current,
+    };
+
+    // Add pagination parameters if we have them
+    if (pageParam) {
+      requestBody.last_post_id = pageParam.last_post_id;
+      requestBody.last_sent_at = pageParam.last_sent_at;
+    } else {
+      requestBody.last_post_id = 0;
+    }
     try {
       const response = await fetch(`${apiUrl}/posts`, {
         method: 'POST',
@@ -252,12 +268,7 @@ const MessageList = ({ studentId }: { studentId: number }) => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session}`,
         },
-        body: JSON.stringify({
-          student_id: student.id,
-          last_post_id,
-          last_sent_at,
-          read_post_ids: readButNotSentMessageIDs.current,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.status === 401) {
@@ -306,64 +317,71 @@ const MessageList = ({ studentId }: { studentId: number }) => {
   } = useInfiniteQuery({
     queryKey: ['messages', student?.id],
     queryFn: fetchMessagesFromAPI,
-    initialPageParam: 0,
+    initialPageParam: null,
     getNextPageParam: lastPage => {
       if (lastPage && lastPage.length > 0) {
-        return lastPage[lastPage.length - 1].id;
+        const lastMessage = lastPage[lastPage.length - 1];
+        return {
+          last_post_id: lastMessage.id,
+          last_sent_at: lastMessage.sent_time,
+        };
       }
       return undefined;
     },
-    enabled: !!student,
+    enabled: Boolean(student && isOnline && session),
+    retry: 2,
+    retryDelay: 1000,
   });
 
-  // Load initial data when component mounts or online status changes
+  // Update refetch ref when it changes
   useEffect(() => {
-    const loadData = async () => {
-      if (!student) return;
+    refetchRef.current = refetch;
+  }, [refetch]);
 
-      setInitialLoading(true);
+  // Load offline messages when component mounts or goes offline
+  useEffect(() => {
+    const loadOfflineData = async () => {
+      if (!student || isOnline) return;
 
-      if (!isOnline) {
-        try {
-          const messages = await fetchMessagesFromDB(
-            db,
-            student.student_number
-          );
-          setLocalMessages(messages);
-        } catch (error) {
-          console.error('Error loading offline messages:', error);
-        } finally {
-          setInitialLoading(false);
-        }
-      } else {
-        try {
-          readButNotSentMessageIDs.current = await fetchReadButNotSentMessages(
-            db,
-            student.student_number
-          );
-          await refetch();
-        } catch (error) {
-          console.error('Error syncing read statuses:', error);
-        } finally {
-          setInitialLoading(false);
-        }
+      try {
+        const messages = await fetchMessagesFromDB(db, student.student_number);
+        setLocalMessages(messages);
+      } catch (error) {
+        console.error('Error loading offline messages:', error);
       }
     };
-    loadData();
-  }, [student, isOnline, db, refetch]);
+    loadOfflineData();
+  }, [student, isOnline, db]);
+
+  // Prepare read messages data for online mode
+  useEffect(() => {
+    const prepareOnlineData = async () => {
+      if (!student || !isOnline || !session) return;
+
+      try {
+        readButNotSentMessageIDs.current = await fetchReadButNotSentMessages(
+          db,
+          student.student_number
+        );
+      } catch (error) {
+        console.error('Error syncing read statuses:', error);
+      }
+    };
+    prepareOnlineData();
+  }, [student, isOnline, db, session]);
 
   // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       const refreshData = async () => {
         if (!student) return;
-        if (isOnline) {
+        if (isOnline && session) {
           readButNotSentMessageIDs.current = await fetchReadButNotSentMessages(
             db,
             student.student_number
           );
-          await refetch();
-        } else {
+          refetchRef.current();
+        } else if (!isOnline) {
           const messages = await fetchMessagesFromDB(
             db,
             student.student_number
@@ -372,19 +390,19 @@ const MessageList = ({ studentId }: { studentId: number }) => {
         }
       };
       refreshData();
-    }, [student, isOnline, db, refetch])
+    }, [student, isOnline, db, session])
   );
 
   // Handle pull-to-refresh
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      if (isOnline) {
+      if (isOnline && session) {
         readButNotSentMessageIDs.current = await fetchReadButNotSentMessages(
           db,
           student!.student_number
         );
-        await refetch();
+        await refetchRef.current();
       } else if (student) {
         const messages = await fetchMessagesFromDB(db, student.student_number);
         setLocalMessages(messages);
@@ -424,8 +442,19 @@ const MessageList = ({ studentId }: { studentId: number }) => {
     return groupMessages(allMessages);
   }, [isOnline, data, localMessages]);
 
+  const { setUnreadCount } = useMessageContext();
+  useEffect(() => {
+    const message_group = messageGroups.map(m => m.messages);
+    const unreadMessages = message_group.filter(m => m[0].viewed_at === null);
+    setUnreadCount(unreadMessages.length);
+  }, [messageGroups, setUnreadCount]);
+
   // Show loading state during initial load
-  if (initialLoading || (isLoading && isOnline)) {
+  if (
+    !student ||
+    (isOnline && !session) ||
+    (isLoading && isOnline && session)
+  ) {
     return <MessageListLoading />;
   }
 
@@ -440,11 +469,12 @@ const MessageList = ({ studentId }: { studentId: number }) => {
         </ThemedText>
         <Button
           title={i18n[language].tryAgain}
-          onPress={() => refetch()}
-          buttonStyle={[
-            styles.refreshButton,
-            { backgroundColor: theme.colors.primary || '#005678' },
-          ]}
+          onPress={() => refetchRef.current()}
+          buttonStyle={[styles.refreshButton, { backgroundColor: '#005678' }]}
+          disabledStyle={[styles.refreshButton, { backgroundColor: '#003d56' }]}
+          loadingProps={{
+            color: theme.mode === 'dark' ? '#4a90a4' : '#ffffff',
+          }}
         />
       </View>
     );
@@ -476,7 +506,7 @@ const MessageList = ({ studentId }: { studentId: number }) => {
       >
         {messageGroups.map(group => (
           <React.Fragment key={group.key}>
-            <Card messageGroup={group.messages} studentId={student.id} />
+            <Card messageGroup={group.messages} studentId={student?.id || 0} />
           </React.Fragment>
         ))}
 
@@ -487,7 +517,11 @@ const MessageList = ({ studentId }: { studentId: number }) => {
             onPress={handleLoadMore}
             buttonStyle={[
               styles.loadMoreButton,
-              { backgroundColor: theme.colors.primary || '#005678' },
+              { backgroundColor: '#005678' },
+            ]}
+            disabledStyle={[
+              styles.loadMoreButton,
+              { backgroundColor: '#003d56' },
             ]}
             disabled={
               isOnline
@@ -495,17 +529,10 @@ const MessageList = ({ studentId }: { studentId: number }) => {
                 : isLoadingMoreOffline
             }
             loading={isOnline ? isFetchingNextPage : isLoadingMoreOffline}
+            loadingProps={{
+              color: theme.mode === 'dark' ? '#4a90a4' : '#ffffff',
+            }}
           />
-        )}
-
-        {/* Loading indicator for infinite scroll */}
-        {(isFetchingNextPage || isLoadingMoreOffline) && (
-          <View style={styles.loadingSpinner}>
-            <ActivityIndicator
-              size='small'
-              color={theme.colors.primary || '#005678'}
-            />
-          </View>
         )}
       </ScrollView>
     </SafeAreaView>
