@@ -8,6 +8,7 @@ const DEMO_MESSAGES = [
     content: '来週月曜日は授業参観日です。保護者の皆様のご参加をお待ちしております。時間は午前10時から12時までです。',
     priority: 'high',
     sent_time: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16).replace('T', ' '), // 1 day ago
+    came_time: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' '), // 1 day ago
     group_name: 'Principal',
     student_id: 80001,
     student_number: 'S2024001',
@@ -19,6 +20,7 @@ const DEMO_MESSAGES = [
     content: '明日までに数学のワークブック第5章を完成させてください。分からない問題があれば、授業中に質問してください。',
     priority: 'low',
     sent_time: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16).replace('T', ' '), // 2 days ago
+    came_time: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' '), // 2 days ago
     group_name: 'Math Teacher',
     student_id: 80001,
     student_number: 'S2024001',
@@ -30,6 +32,7 @@ const DEMO_MESSAGES = [
     content: 'インフルエンザが流行しています。手洗い・うがいを徹底し、体調不良の場合は無理せず休養してください。',
     priority: 'high',
     sent_time: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16).replace('T', ' '), // 3 days ago
+    came_time: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' '), // 3 days ago
     group_name: 'School Nurse',
     student_id: 80001,
     student_number: 'S2024001',
@@ -41,6 +44,7 @@ const DEMO_MESSAGES = [
     content: '今週土曜日の練習は天候により中止となりました。来週の予定は後日お知らせします。',
     priority: 'medium',
     sent_time: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16).replace('T', ' '), // 4 days ago
+    came_time: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' '), // 4 days ago
     group_name: 'Club Advisor',
     student_id: 80002,
     student_number: 'S2024002',
@@ -52,6 +56,7 @@ const DEMO_MESSAGES = [
     content: '今月末が学費納入期限となっております。お忘れのないようお願いいたします。詳細は配布済みの書類をご確認ください。',
     priority: 'high',
     sent_time: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16).replace('T', ' '), // 5 days ago
+    came_time: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' '), // 5 days ago
     group_name: 'Administration',
     student_id: 80001,
     student_number: 'S2024001',
@@ -63,6 +68,7 @@ const DEMO_MESSAGES = [
     content: '来月の遠足の詳細が決まりました。行き先は科学博物館です。お弁当と水筒を忘れずに持参してください。',
     priority: 'low',
     sent_time: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16).replace('T', ' '), // 7 days ago
+    came_time: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' '), // 7 days ago
     group_name: 'Homeroom Teacher',
     student_id: 80002,
     student_number: 'S2024002',
@@ -115,9 +121,9 @@ export async function initializeDemoData(db: SQLiteDatabase) {
     for (const message of DEMO_MESSAGES) {
       await db.runAsync(
         `INSERT OR REPLACE INTO message (
-          id, title, content, priority, sent_time, group_name, student_id, student_number, read_status
+          id, title, content, priority, sent_time, came_time, group_name, student_id, student_number, read_status
         ) VALUES (
-          $id, $title, $content, $priority, $sent_time, $group_name, $student_id, $student_number, $read_status
+          $id, $title, $content, $priority, $sent_time, $came_time, $group_name, $student_id, $student_number, $read_status
         )`,
         [
           message.id,
@@ -125,6 +131,7 @@ export async function initializeDemoData(db: SQLiteDatabase) {
           message.content,
           message.priority,
           message.sent_time,
+          message.came_time,
           message.group_name,
           message.student_id,
           message.student_number,

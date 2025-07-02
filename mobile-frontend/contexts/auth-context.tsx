@@ -84,6 +84,10 @@ export function SessionProvider(props: React.PropsWithChildren) {
           const fullPhoneNumber = country?.callingCode + phoneNumber.replaceAll(' ', '');
           if (isDemoModeLogin(fullPhoneNumber, password)) {
             try {
+              // Clear all existing student data before initializing demo data
+              await db.execAsync('DELETE FROM student');
+              await db.execAsync('DELETE FROM message');
+              
               // Initialize demo data in SQLite
               await initializeDemoData(db);
               
